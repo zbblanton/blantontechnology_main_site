@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+		<style>
+			.header_text {
+				text-align: center;
+				margin-bottom: 15px;
+			}
+			.list-group {
+				margin-bottom: 10px;
+			}
+			nav {
+				margin-bottom: 15px;
+			}
+
+      /*card styles */
+      .card{
+        margin-bottom: 10px;
+      }
+      .card-header{
+        color: white;
+        font-size: medium;
+      }
+      .card-title {
+          margin-top: .75rem;
+      }
+      /*End card styles */
+		</style>
+  </head>
+  <body>
+    <nav class="navbar navbar-toggleable-md navbar-inverse bg-inverse bg-faded">
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="navbar-brand" href="#">Deduplication Engine</a>
+
+      <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+        <ul class="navbar-nav mr-auto mt-2 mt-md-0">
+        </ul>
+        <form class="form-inline my-2 my-lg-0">
+          <input class="form-control mr-sm-2" type="text" placeholder="Filepath">
+          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+      </div>
+    </nav>
+
+    <div class="container-fluid" ng-app="myApp" ng-controller="customersCtrl">
+      <div class="row">
+        <div class="col-md-10">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="ml-auto p-2">
+                <button ng-click="get_prev()" class="btn btn-secondary" role="button" aria-disabled="true">Prev</button>
+                <button ng-click="test_post()" class="btn btn-secondary" role="button" aria-disabled="true">Next</button>
+
+                <form>
+                  <div class="form-group">
+                    <label for="formGroupExampleInput">Example label</label>
+                    <input type="text" ng-model="user.fname" class="form-control" id="formGroupExampleInput" placeholder="Example input">
+                  </div>
+                  <div class="form-group">
+                    <label for="formGroupExampleInput2">Another label</label>
+                    <input type="text" ng-model="user.lname" class="form-control" id="formGroupExampleInput2" placeholder="Another input">
+                  </div>
+                  <div class="form-group">
+                    <label for="formGroupExampleInput2">recaptcha</label>
+                    <input type="text" ng-model="recaptcha" class="form-control" id="formGroupExampleInput2" placeholder="Another input">
+                  </div>
+                  <div class="g-recaptcha" data-sitekey="6LfpPC4UAAAAAOTs1q3qVcz8K6zmdE99AwPfWFmX"></div>
+                  <br><br>
+                  <button ng-click="submit_form()">Submit</button>
+                </form>
+                <p>fname = {{user.fname}}</p>
+                <p>lname = {{user.lname}}</p>
+                <p>recaptcha = {{recaptcha}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- jQuery first, then Tether, then Bootstrap JS. -->
+    <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <script>
+      var app = angular.module('myApp', []);
+      app.controller('customersCtrl', function($scope, $http) {
+        var current_from = 0;
+        var current_to = 10;
+        var get_url = "http://104.236.33.156:8181/api/list/" + current_from + "/" + current_to;
+        //$http.get(get_url).then(function (response) {
+        //    $scope.myData = response.data.List;
+        //});
+        $scope.get_next = function() {
+          current_from+= 10;
+          current_to+= 10;
+          var get_url = "http://104.236.33.156:8181/api/list/" + current_from + "/" + current_to;
+          $http.get(get_url).then(function (response) {
+              $scope.myData = response.data.List;
+          });
+        }
+        $scope.get_prev = function() {
+          current_from-= 10;
+          current_to-= 10;
+          var get_url = "https://api.mrandmrsblanton.com/api/list/length";
+          $http.get(get_url).then(function (response) {
+              $scope.myData = response.data.List;
+          });
+        }
+        $scope.test_post = function() {
+          current_from-= 10;
+          current_to-= 10;
+          var get_url = "https://api.mrandmrsblanton.com/add/rsvp";
+          //var data = JSON.stringify({Fname: "test2", Lname: "test22", Recaptcha: "test23"})
+          var data = {
+            Fname : "test2",
+            Lname : "test22",
+            Recaptcha : "test23"
+          };          ;
+          console.log(data);
+          $http.post(get_url, data).then(function (response) {
+              //$scope.myData = response.data.List;
+              console.log(response.data.Fname);
+          });
+        }
+        $scope.submit_form = function() {
+          $scope.recaptcha = grecaptcha.getResponse()
+          var get_url = "https://api.mrandmrsblanton.com/add/rsvp";
+          //var data = JSON.stringify({Fname: "test2", Lname: "test22", Recaptcha: "test23"})
+          var data = {
+            Fname : "test2",
+            Lname : "test22",
+            Recaptcha : $scope.recaptcha
+          };          ;
+          //console.log(data);
+          $http.post(get_url, data).then(function (response) {
+              //$scope.myData = response.data.List;
+              console.log(response.data);
+          });
+        }
+        $scope.add_to_deletion_list = function() {
+          this.css("background-color","red");
+        }
+      });
+
+      $(".dup_list_item").click(function(){
+        alert("The paragraph was clicked.");
+      });
+    </script>
+  </body>
+</html>

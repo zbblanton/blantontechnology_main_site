@@ -1,0 +1,190 @@
+<!DOCTYPE html>  
+<html>
+    <head>  
+        <meta charset="utf-8" />
+        <meta name="viewport" content = "width = device-width, initial-scale = 1.0, minimum-scale = 1, maximum-scale = 1, user-scalable = no" />
+    	<meta name="apple-mobile-web-app-capable" content="yes">
+    	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <title>Simple Game</title>
+        <script type="text/javascript" src="phaser.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    </head>
+    <style>
+    	body {
+			width: 100%;
+			height: 100%;
+			margin: 0;
+			padding: 0;
+			background-color: #00FFF3;
+		}	
+    
+    	#canvas_container{
+    		position: fixed;
+    		top: 0;
+    		left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: #FFFFFF;
+		}
+    </style>
+    <body>
+		<div id="canvas_container"></div>	
+    </body>
+    <script type="text/javascript">	   
+		var canvas_w = $('#canvas_container').width();
+		var canvas_h = $('#canvas_container').height();
+    	var game = new Phaser.Game(canvas_w, canvas_h, Phaser.AUTO, 'canvas_container', { preload: preload, create: create, update: update });
+    	
+    	var game_started = false;
+    	var score = 0;
+		var score_text;
+		var start_btn;
+		var game_over_text;
+		var game_over_btn;
+		var restart_btn;
+		
+		var game_been_played = false;
+		
+		var meteorite_array = [];
+		var star_array = [];
+		var create_meteorite_timer;
+		
+		function create_meteorite(){
+			if(game_started == false){
+				return;
+			}
+		
+			var meteorite = game.add.sprite(0, -100, 'meteorite');		    	    		
+    		meteorite.animations.add('falling', Phaser.Animation.generateFrameNames('sprite_', 1, 6), 5, true);
+			meteorite.animations.add('exploding', Phaser.Animation.generateFrameNames('sprite_', 1, 2), 5, true);			
+			
+			//Randomely play meteorite, if off screen move over the difference
+			meteorite.x = Math.floor((Math.random() * (game.width - (meteorite.width-30))) + 1);
+			
+			//Allows for outofbounds event to be used
+			meteorite.checkWorldBounds = true;
+			
+			meteorite.animations.play('falling', 30, true);
+			
+			//Add input
+			meteorite.inputEnabled = true;
+			
+			//Add event to destory sprite					
+			meteorite.events.onInputDown.add(destory_meteorite, this);
+			meteorite.events.onOutOfBounds.add(is_game_over, this);
+			
+			meteorite_array.push(meteorite);
+		}
+						
+		function destory_meteorite(meteorite){
+			meteorite.destroy();			
+			score+=1;			
+			score_text.setText('Score ' + score)
+		}
+		
+		function is_game_over(meteorite){			
+			if(meteorite.y > game.height - 20){
+				game_been_played = true;
+				game_started = false;
+				
+				//Remove all meteorites   			    			
+				for(i = 0; i < meteorite_array.length; i++){
+					meteorite_array[i].destroy();    				
+				}
+				meteorite_array = [];
+								    			
+    			game_over_text.visible = true;
+    			restart_btn.visible = true;
+    			//restart_game();
+			}					
+		}
+		
+		function restart_game(){
+			game_started = false;					
+
+			//Stop everything						
+			
+			//Remove all stars
+			for(i = 0; i < star_array.length; i++){
+				star_array[i].destroy();
+			}
+			star_array= [];
+			
+			game.world.removeAll();
+			create();
+		}
+		
+		function start_game(){
+			start_btn.visible = false;
+			
+			//Start timer to create meteorites
+			if(create_meteorite_timer == undefined){
+				create_meteorite_timer = game.time.events.loop(300, create_meteorite, this);
+			}
+		}
+		
+		function preload() {
+			game.load.image('bunny', 'bunny.png');
+			game.load.image('city', 'city.png');
+			game.load.image('star', 'star.png');
+			game.load.atlas('meteorite', 'meteorite_sheet.png', 'meteorite_sheet.json');
+		}
+		
+		function create() {
+			//Set background
+			game.stage.backgroundColor = "#030E92";	
+			
+			//Set game score
+			score = 0;				
+			
+			//Create stars ---- Was 500 instead of width divided by 1.5
+			for(i = 0; i < (game.width / 1.5); i++){ 
+				var star_x = Math.floor((Math.random() * game.width) + 1);
+    			var star_y = Math.floor((Math.random() * game.height) + 1);    			
+				star = game.add.sprite(star_x, star_y, 'star');
+				var star_scale = Math.random();
+				star.scale.x = star_scale;
+				star.scale.y = star_scale;				
+				star_array.push(star);
+			}	
+			
+			//Add Score and Game Over text
+			var style = { font: "bold 32px Arial", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+			score_text = game.add.text(0, 0, 'Score ' + score, style);
+			score_text.setShadow(2, 2, 'rgba(0, 0, 0, 0.7)', 2);	
+			score_text.setTextBounds(0, 0, game.width, 100);	
+			
+			game_over_text = game.add.text(0, 0, 'Game Over', style);
+			game_over_text.setShadow(2, 2, 'rgba(0, 0, 0, 0.7)', 2);	
+			game_over_text.setTextBounds(0, 0, game.width, (game.height / 2));
+			game_over_text.visible = false;
+			
+			if(game_been_played == false){
+				start_btn = game.add.text(0, 0, 'Click To Start', style);
+				start_btn.setShadow(2, 2, 'rgba(0, 0, 0, 0.7)', 2);	
+				start_btn.setTextBounds(0, 0, game.width, ((game.height / 2) + game_over_text.height + 30));
+				start_btn.inputEnabled = true;
+				start_btn.events.onInputDown.add(start_game);
+			}
+									
+			restart_btn = game.add.text(0, 0, 'Click To Restart', style);
+			restart_btn.setShadow(2, 2, 'rgba(0, 0, 0, 0.7)', 2);	
+			restart_btn.setTextBounds(0, 0, game.width, ((game.height / 2) + game_over_text.height + 30));
+			restart_btn.inputEnabled = true;
+			restart_btn.events.onInputDown.add(restart_game);
+			restart_btn.visible = false;
+			
+			//Create city
+			star = game.add.sprite(0, game.height-100, 'city');
+						
+			game_started = true;
+		}
+		
+		function update() {
+			//Move meteorites
+			for(i = 0; i < meteorite_array.length; i++){
+				meteorite_array[i].y+= 10;
+			}
+		}
+    </script>  
+</html>
